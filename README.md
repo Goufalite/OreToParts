@@ -2,6 +2,7 @@
 Mod for the game Kerbal Space Program to create parts from ore.
 
 Mine ore.
+
 Receive parts!
 
 Introducing a minimalistic mod transforming all ore tanks into converters changing ore into vital parts such as repair kits, solar panels,...
@@ -29,25 +30,33 @@ As far as I tested this, the mod manages unknown parts to craft by putting ??par
     }
 
 
-CC-BY-SA 4.0
-Last release :
-Github :
-Issues :
+## Licence
 
-## Dependencies :
-* Module Manager (hard dependency) - install separately
+CC-BY-SA 4.0
+
+Last release :
+
+Github : https://github.com/Goufalite/OreToParts
+
+Issues : https://github.com/Goufalite/OreToParts/issues
+
+## Dependencies
+* [Module Manager](https://forum.kerbalspaceprogram.com/index.php?/topic/50533-18x-110x-module-manager-414-july-7th-2020-locked-inside-edition/) (hard dependency) - install separately
 
 ## Instructions 
 
-Remove previous versions. Unzip into the GameData folder of your KSP installation, your folder should look like GameData/OreToParts
+* Remove previous versions. 
+* Unzip into the GameData folder of your KSP installation, your folder should look like GameData/OreToParts
 
 Please provide a KSP.log file in order for me to help you.
 
 
-Localization (please help) : English : OK, French : OK
+## Localization 
+
+English, French
 
 ## Changelog
-###0.1.0.0
+### 0.1.0.0
 * initial release
 * ore tanks can convert parts by either crafting them or duplicating them
 * ore tanks have different maximum volume
