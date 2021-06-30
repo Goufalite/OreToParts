@@ -39,7 +39,7 @@ namespace OreToParts
                 crafts = new List<string>();
                 for (int i = 0; i < lPartList.Length; i++)
                 {
-                    crafts.Add(lPartList[i]);
+                    crafts.Add(lPartList[i].Trim());
                 }
                 SetObject();
 
