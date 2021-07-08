@@ -34,7 +34,7 @@ As far as I tested this, the mod manages unknown parts to craft by putting ??par
 
 CC-BY-SA 4.0
 
-Last release :
+Last release : https://github.com/Goufalite/OreToParts/releases/
 
 Github : https://github.com/Goufalite/OreToParts
 
