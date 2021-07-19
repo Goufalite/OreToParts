@@ -10,46 +10,75 @@ namespace OreToParts
 {
     public class OreToParts : PartModule
     {
-        [KSPField]
+        [KSPField(guiActive = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        [UI_ChooseOption(scene = UI_Scene.Flight)]
         public string craftPart;
 
-        [KSPField(guiActive = true, guiActiveUnfocused = true,  guiName = "#oretotanks_craftpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string craftPartName;
 
         [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_costpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        public string displayCraftCost;
+
         public int craftCost;
 
         [KSPField(guiActive = false)]
         public string partList;
 
         [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_duplicatecost", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
-        public int duplicateCost;
+        public string duplicateCost;
 
-        private List<string> crafts;
-        private int selectedCraft = 0;
+        [KSPField(guiActive = false)]
+        public string resources;
+
+        public Dictionary<string, float> resourcesDict;
 
         public override void OnAwake()
         {
             base.OnAwake();
-            
+
+            // partlist parsing
+            var crafts = new List<string>();
             try
             {
                 var lPartList = partList.Split(',');
-
-                crafts = new List<string>();
+                var craftPartName = new List<String>();
+        
                 for (int i = 0; i < lPartList.Length; i++)
                 {
                     crafts.Add(lPartList[i].Trim());
+                    craftPartName.Add(PartDisplayName(lPartList[i].Trim()));
                 }
-                SetObject();
+                var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
+                uiparts.options = crafts.ToArray();
+                uiparts.display = craftPartName.ToArray();
+                craftPart = uiparts.options[0];
 
             }
             catch (Exception e)
             {
                 print("[OreToParts]Unable to load part list to craft: " + e.Message);
                 crafts = new List<string>() { "evaRepairKit" };
-                selectedCraft = 0;
-                SetObject();
+                var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
+                uiparts.options = crafts.ToArray();
+                uiparts.display = new string[] { "Repair kit" };
+                craftPart = uiparts.options[0];
+            }
+
+            // resource parsing
+            resourcesDict = new Dictionary<string, float>();
+            try
+            {
+                var ressTab = resources.Split(',');
+                foreach (var ress in ressTab)
+                {
+                    var ratioPart = ress.Split('|');
+                    resourcesDict.Add(ratioPart[0].Trim(), float.Parse(ratioPart[1]));
+                }
+            }
+            catch (Exception e)
+            {
+                print("[OreToParts]Unable to load resource list: " + e.Message);
+                resourcesDict.Add("Ore", 1.0f);
             }
         }
 
@@ -64,35 +93,20 @@ namespace OreToParts
             }
             if (inventory.storedParts.ContainsKey(0))
             {
-                duplicateCost = PartCost(PartMass(inventory.storedParts[0].partName));
+                duplicateCost = DisplayPartCost(PartMass(inventory.storedParts[0].partName));
             }
             else
             {
-                duplicateCost = 0;
+                duplicateCost = "?";
             }
-        }
-
-        private void SetObject()
-        {
-            this.craftPart = crafts[selectedCraft];
-            this.craftPartName = PartDisplayName(this.craftPart);
-            this.craftCost = PartCost(PartMass(this.craftPart));
+            craftPartName = PartDisplayName(craftPart);
+            displayCraftCost = DisplayPartCost(PartMass(craftPart));
         }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-
         }
-
-        [KSPEvent(guiName = "#oretotanks_switchpart", guiActiveEditor = false, guiActive = true, externalToEVAOnly = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
-        public void SwitchPart()
-        {
-            selectedCraft = (selectedCraft + 1) % crafts.Count;
-            SetObject();
-
-        }
-
 
         [KSPEvent(guiName = "#oretotanks_craftpart", guiActiveEditor = false, guiActive = true, externalToEVAOnly = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public void CraftPart()
@@ -109,7 +123,7 @@ namespace OreToParts
             if (ap == null)
             {
                 print("Unknown part " + craftPart);
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_unknownpart", new object[] { craftPart }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_unknownpart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
             if (!ResearchAndDevelopment.PartModelPurchased(ap))
@@ -136,12 +150,12 @@ namespace OreToParts
             }
 
             // price
-            var oreContent = part.Resources["Ore"].amount;
-            if (oreContent < craftCost)
+            string canAffordPart = CanAfford(craftPart);
+            if (!string.IsNullOrEmpty(canAffordPart))
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_cannotcraft", new object[] { craftCost }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(canAffordPart, 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
-            }            
+            }
 
             if (inventory.HasMassLimit && inventory.massCapacity + PartMass(craftPart) > inventory.massLimit + 0.00001f)
             {
@@ -174,12 +188,12 @@ namespace OreToParts
             }
             StoredPart firstPart = inventory.storedParts[0];
             var myPartName = PartDisplayName(firstPart.partName);
+            
             // price
-            int orecost = PartCost(PartMass(firstPart.partName));
-            var oreContent = part.Resources["Ore"].amount;
-            if (oreContent < orecost)
+            string canAffordPart = CanAfford(firstPart.partName);
+            if (!string.IsNullOrEmpty(canAffordPart))
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_cannotcraft", new object[] { orecost }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(canAffordPart, 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
 
@@ -208,7 +222,7 @@ namespace OreToParts
                     ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_cannotstore", new object[] { PartDisplayName(partName) }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
                     return;
                 }
-                part.Resources["Ore"].amount -= craftCost;
+                ConsumeOre(partName);
             }
             catch (Exception e)
             {
@@ -308,9 +322,41 @@ namespace OreToParts
             return volume;
         }
 
-        private static int PartCost(float mass)
+        private string CanAfford(string partName)
         {
-            return (int)Math.Ceiling(mass * 1000);
+            float mass = PartMass(partName);
+            foreach (var ress in resourcesDict)
+            {
+                double price = Math.Round(ress.Value * mass * 1000, 2);
+                if (!part.Resources.Contains(ress.Key))
+                {
+                    return Localizer.Format("#oretotanks_cannotafford", new object[] { ress.Key, price });
+                }
+                if (part.Resources[ress.Key].amount < price)
+                {
+                    return Localizer.Format("#oretotanks_cannotafford", new object[] { ress.Key, price });
+                }
+            }
+            return "";
+        }
+
+        private void ConsumeOre(string partName)
+        {
+            float mass = PartMass(partName);
+            foreach (var ress in resourcesDict)
+            { 
+                part.Resources[ress.Key].amount -= Math.Round(ress.Value * mass * 1000, 2);
+            }
+        }
+
+        private string DisplayPartCost(float mass)
+        {
+            string price = "";
+            foreach(var ress in this.resourcesDict)
+            {
+                price += ress.Key + " (" + Math.Round(ress.Value * mass * 1000,2) + ") ";
+            }
+            return price;
         }
 
         private static bool RealStoreCargoPartAtSlot(ModuleInventoryPart inventory, string partName, int inventorySlot)

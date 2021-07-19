@@ -29,6 +29,16 @@ As far as I tested this, the mod manages unknown parts to craft by putting ??par
     	}
     }
 
+## Managing your own resources (CRP, Simplex Resources,...)
+
+Apply patches to add resources to your containers, add the OreToParts module to the container, and specify the receipe:
+
+    @PART[*]:HAS[@MODULE[OreToParts]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
+    {
+    	@MODULE[OreToParts] {
+		    @resources = Ore|0.5,Hydrogen|1
+	    }
+    }
 
 ## Licence
 
@@ -56,6 +66,12 @@ Please provide a KSP.log file in order for me to help you.
 English, French
 
 ## Changelog
+
+### 0.2.0.0
+* Added Eva cylinders
+* Multiple resources with ratios
+* New friendly slider to select a craft part
+
 ### 0.1.0.0
 * initial release
 * ore tanks can convert parts by either crafting them or duplicating them

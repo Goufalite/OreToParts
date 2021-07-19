@@ -1,0 +1,38 @@
+// add resources to the tanks you want to use
+@PART[RadialOreTank]:NEEDS[CommunityResourcePack]
+{
+	%RESOURCE[Hydrogen]
+	{
+		name = Hydrogen
+		amount = 0
+		maxAmount = 75
+	}
+}
+
+@PART[SmallTank]:NEEDS[CommunityResourcePack]
+{
+	%RESOURCE[Hydrogen]
+	{
+		name = Hydrogen
+		amount = 0
+		maxAmount = 300
+	}
+}
+
+@PART[LargeTank]:NEEDS[CommunityResourcePack]
+{
+	%RESOURCE[Hydrogen]
+	{
+		name = Hydrogen
+		amount = 0
+		maxAmount = 1500
+	}
+}
+
+// apply the resource change
+@PART[*]:HAS[@MODULE[OreToParts]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
+{
+	@MODULE[OreToParts] {
+		@resources = Ore|0.5,Hydrogen|1
+	}
+}

@@ -1,0 +1,20 @@
+// adapt on the tanks/resources you want
+@PART[*]:HAS[@RESOURCE[NaturalOre]]:AFTER[ANGLECANMODS]
+{
+	%MODULE[OreToParts]
+    {
+        // lists
+		partList = evaRepairKit,evaScienceKit,HighGainAntenna5,solarPanels4,evaJetpack,evaCylinder
+		//default values, don't touch
+		craftPart = evaRepairKit
+        craftPartName = Repair Kit
+		cost = 15
+        resources = NaturalOre|1
+    }
+	
+	%MODULE[ModuleInventoryPart]
+    {
+        InventorySlots = 2
+        packedVolumeLimit = 200
+    }
+}
