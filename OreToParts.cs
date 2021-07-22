@@ -30,7 +30,7 @@ namespace OreToParts
         [KSPField(guiActive = false)]
         public string resources;
 
-        public Dictionary<string, float> resourcesDict;
+        public Dictionary<string, float> craftResourcesDict;
 
         public override void OnAwake()
         {
@@ -46,7 +46,7 @@ namespace OreToParts
                 for (int i = 0; i < lPartList.Length; i++)
                 {
                     crafts.Add(lPartList[i].Trim());
-                    craftPartName.Add(PartDisplayName(lPartList[i].Trim()));
+                    craftPartName.Add(PartHelper.PartDisplayName(lPartList[i].Trim()));
                 }
                 var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
                 uiparts.options = crafts.ToArray();
@@ -65,20 +65,20 @@ namespace OreToParts
             }
 
             // resource parsing
-            resourcesDict = new Dictionary<string, float>();
+            craftResourcesDict = new Dictionary<string, float>();
             try
             {
                 var ressTab = resources.Split(',');
                 foreach (var ress in ressTab)
                 {
                     var ratioPart = ress.Split('|');
-                    resourcesDict.Add(ratioPart[0].Trim(), float.Parse(ratioPart[1]));
+                    craftResourcesDict.Add(ratioPart[0].Trim(), float.Parse(ratioPart[1]));
                 }
             }
             catch (Exception e)
             {
                 print("[OreToParts]Unable to load resource list: " + e.Message);
-                resourcesDict.Add("Ore", 1.0f);
+                craftResourcesDict.Add("Ore", 1.0f);
             }
         }
 
@@ -93,14 +93,21 @@ namespace OreToParts
             }
             if (inventory.storedParts.ContainsKey(0))
             {
-                duplicateCost = DisplayPartCost(PartMass(inventory.storedParts[0].partName));
+                duplicateCost = PartHelper.DisplayPartCost(inventory.storedParts[0].partName, craftResourcesDict);
             }
             else
             {
                 duplicateCost = "?";
             }
-            craftPartName = PartDisplayName(craftPart);
-            displayCraftCost = DisplayPartCost(PartMass(craftPart));
+            craftPartName = PartHelper.PartDisplayName(craftPart);
+            if (craftPartName.StartsWith("??"))
+            {
+                displayCraftCost = "??";
+            }
+            else
+            {
+                displayCraftCost = PartHelper.DisplayPartCost(craftPart, craftResourcesDict);
+            }
         }
 
         public override void OnStart(StartState state)
@@ -136,38 +143,37 @@ namespace OreToParts
             float volPart;
             try
             {
-                volPart = PartVolume(craftPart);
-                if (volPart==-1.0f)
+                volPart = PartHelper.PartVolume(craftPart);
+                if (volPart == -1.0f)
                 {
+                    // movable part but cannot be stored
                     ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_noninventorypart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
                     return;
                 }
             }
             catch
             {
+                // construction part, cannot be moved
                 ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_noninventorypart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
 
             // price
-            string canAffordPart = CanAfford(craftPart);
+            string canAffordPart = PartHelper.CanAfford(part, craftPart, craftResourcesDict);
             if (!string.IsNullOrEmpty(canAffordPart))
             {
                 ScreenMessages.PostScreenMessage(canAffordPart, 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
 
-            if (inventory.HasMassLimit && inventory.massCapacity + PartMass(craftPart) > inventory.massLimit + 0.00001f)
+            // volume/mass storage
+            string checkMassVolumeInventory = InventoryHelper.CheckMassVolumeInventory(inventory, craftPart);
+            if (!string.IsNullOrEmpty(checkMassVolumeInventory))
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_maxmass", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(checkMassVolumeInventory, 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
-            if (inventory.HasPackedVolumeLimit && inventory.volumeCapacity + volPart > inventory.packedVolumeLimit + 0.00001f)
-            {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_maxvolume", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
-                return;
-            }
-
+            
             StoreMyPart(inventory, craftPart);
         }
 
@@ -187,25 +193,20 @@ namespace OreToParts
                 return;
             }
             StoredPart firstPart = inventory.storedParts[0];
-            var myPartName = PartDisplayName(firstPart.partName);
-            
+
             // price
-            string canAffordPart = CanAfford(firstPart.partName);
+            string canAffordPart = PartHelper.CanAfford(part, firstPart.partName, craftResourcesDict);
             if (!string.IsNullOrEmpty(canAffordPart))
             {
                 ScreenMessages.PostScreenMessage(canAffordPart, 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
 
-            //check volume, since the part is duplicated it has a volume
-            if (inventory.HasMassLimit && inventory.massCapacity+PartMass(firstPart.partName) > inventory.massLimit + 0.00001f)
+            // check mass/volume
+            string checkMassVolumeInventory = InventoryHelper.CheckMassVolumeInventory(inventory, firstPart.partName);
+            if (!string.IsNullOrEmpty(checkMassVolumeInventory))
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_maxmass", new object[] { myPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
-                return;
-            }
-            if (inventory.HasPackedVolumeLimit && inventory.volumeCapacity + PartVolume(firstPart.partName) > inventory.packedVolumeLimit + 0.00001f)
-            {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_maxvolume", new object[] { myPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(checkMassVolumeInventory, 2.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
 
@@ -216,13 +217,13 @@ namespace OreToParts
         {
             try
             {
-                bool succes = RealStoreCargoPartAtSlot(inventory, partName, -1);
+                bool succes = InventoryHelper.RealStoreCargoPartAtSlot(inventory, partName, -1);
                 if (!succes)
                 {
-                    ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_cannotstore", new object[] { PartDisplayName(partName) }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                    ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_cannotstore", new object[] { PartHelper.PartDisplayName(partName) }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
                     return;
                 }
-                ConsumeOre(partName);
+                PartHelper.ConsumeOre(part, partName, craftResourcesDict);
             }
             catch (Exception e)
             {
@@ -230,12 +231,6 @@ namespace OreToParts
             }
         }
         #region debug
-
-        private static void myDebug(string txt)
-        {
-            print("[OreToParts]DEBUG -- " + txt);
-        }
-
 #if DEBUG
         [KSPEvent(guiName = "Debug", guiActive = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
 #endif
@@ -251,189 +246,26 @@ namespace OreToParts
             {
                 if (!inventory.storedParts.ContainsKey(i))
                 {
-                    myDebug("slot" + i + " - undefined");
+                    MyDebug("slot" + i + " - undefined");
                     continue;
                 }
-                myDebug("slot " + i + " " + inventory.storedParts[i].ToString());
-                myDebug("slot " + i + " part:" + inventory.storedParts[i].partName);
-                myDebug("slot " + i + " variant:" + inventory.storedParts[i].variantName);
-                myDebug("slot " + i + " full:" + inventory.storedParts[i].IsFull.ToString());
-                myDebug("slot " + i + " canstack:" + inventory.storedParts[i].CanStack.ToString());
-                myDebug("slot " + i + " empty:" + inventory.storedParts[i].IsEmpty.ToString());
-                myDebug("slot " + i + " quantity:" + inventory.storedParts[i].quantity);
-                
+                MyDebug("slot " + i + " " + inventory.storedParts[i].ToString());
+                MyDebug("slot " + i + " part:" + inventory.storedParts[i].partName);
+                MyDebug("slot " + i + " variant:" + inventory.storedParts[i].variantName);
+                MyDebug("slot " + i + " full:" + inventory.storedParts[i].IsFull.ToString());
+                MyDebug("slot " + i + " canstack:" + inventory.storedParts[i].CanStack.ToString());
+                MyDebug("slot " + i + " empty:" + inventory.storedParts[i].IsEmpty.ToString());
+                MyDebug("slot " + i + " quantity:" + inventory.storedParts[i].quantity);
+                MyDebug("slot " + i + " partpart:" + inventory.storedParts[i].snapshot.partRef.partName);
+                MyDebug("slot " + i + " partpart:" + inventory.storedParts[i].snapshot.partRef.Resources["EVA Propellant"].amount);
             }
         }
-        #endregion
-        #region helpers
-        private static float PartMass(string partName)
+
+        private static void MyDebug(string txt)
         {
-            AvailablePart availablePart = PartLoader.getPartInfoByName(partName);
-            if (availablePart == null)
-            {
-                throw new Exception("Unknown part " + partName);
-            }
-            float mass = 0.0f;
-            bool getvalue = availablePart.partConfig.TryGetValue("mass", ref mass);
-            if (!getvalue)
-            {
-                throw new Exception("No mass found " + partName);
-            }
-            return mass;
+            print("[OreToParts]DEBUG -- " + txt);
         }
 
-        private static string PartDisplayName(string partName)
-        {
-            AvailablePart availablePart = PartLoader.getPartInfoByName(partName);
-            if (availablePart == null)
-            {
-                print("Unknown part " + partName);
-                return "??" + partName + "??";
-            }
-            return availablePart.title;
-        }
-
-        private static float PartVolume(string partName)
-        {
-            AvailablePart availablePart = PartLoader.getPartInfoByName(partName);
-            if (availablePart == null)
-            {
-                throw new Exception("Unknown part " + partName);
-            }
-            float volume = 0.0f;
-            bool getvalue = false;
-            foreach (ConfigNode module in availablePart.partConfig.GetNodes())
-            {
-                string name = "";
-                module.TryGetValue("name", ref name);
-                if (!name.Equals("ModuleCargoPart"))
-                {
-                    continue;
-                }
-                getvalue = module.TryGetValue("packedVolume", ref volume);
-                break;
-
-            }
-
-            if (!getvalue)
-            {
-                throw new Exception("No volume found " + partName);
-            }
-            return volume;
-        }
-
-        private string CanAfford(string partName)
-        {
-            float mass = PartMass(partName);
-            foreach (var ress in resourcesDict)
-            {
-                double price = Math.Round(ress.Value * mass * 1000, 2);
-                if (!part.Resources.Contains(ress.Key))
-                {
-                    return Localizer.Format("#oretotanks_cannotafford", new object[] { ress.Key, price });
-                }
-                if (part.Resources[ress.Key].amount < price)
-                {
-                    return Localizer.Format("#oretotanks_cannotafford", new object[] { ress.Key, price });
-                }
-            }
-            return "";
-        }
-
-        private void ConsumeOre(string partName)
-        {
-            float mass = PartMass(partName);
-            foreach (var ress in resourcesDict)
-            { 
-                part.Resources[ress.Key].amount -= Math.Round(ress.Value * mass * 1000, 2);
-            }
-        }
-
-        private string DisplayPartCost(float mass)
-        {
-            string price = "";
-            foreach(var ress in this.resourcesDict)
-            {
-                price += ress.Key + " (" + Math.Round(ress.Value * mass * 1000,2) + ") ";
-            }
-            return price;
-        }
-
-        private static bool RealStoreCargoPartAtSlot(ModuleInventoryPart inventory, string partName, int inventorySlot)
-        {
-            if (String.IsNullOrEmpty(partName))
-            {
-                return false;
-            }
-            if (inventory == null)
-            {
-                return false;
-            }
-            int availableInventorySlot = -1;
-
-            if (inventorySlot == -1)
-            {
-                // find first available inventory slot
-                for (int i = 0; i < inventory.InventorySlots; i++)
-                {
-                    if (!inventory.storedParts.ContainsKey(i))
-                    {
-                        myDebug("Found undefined empty slot : " + i);
-
-                        availableInventorySlot = i;
-                        break;
-                    }
-                    StoredPart myStoredPart = inventory.storedParts[i];
-                    if (myStoredPart != null && myStoredPart.IsEmpty)
-                    {
-                        myDebug("Found empty slot : " + i);
-
-                        availableInventorySlot = i;
-                        break;
-                    }
-                    if (myStoredPart != null && myStoredPart.partName.Equals(partName) && myStoredPart.CanStack && myStoredPart.stackCapacity > myStoredPart.quantity)
-                    {
-                        myDebug("Found stackable slot : " + i);
-                        availableInventorySlot = i;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                if (inventory.storedParts.ContainsKey(inventorySlot) && inventory.storedParts[inventorySlot].IsFull)
-                {
-                    return false;
-                }
-                availableInventorySlot = inventorySlot;
-            }
-            if (availableInventorySlot == -1)
-            {
-                myDebug("No slot found!");
-                return false;
-            }
-            try
-            {
-                if (!inventory.storedParts.ContainsKey(availableInventorySlot) || !inventory.storedParts[availableInventorySlot].CanStack)
-                {
-                    myDebug("Full add in " + availableInventorySlot);
-                    bool succes = inventory.StoreCargoPartAtSlot(partName, availableInventorySlot);
-                    return succes;
-                }
-                else
-                {
-                    myDebug("Quantity add in " + availableInventorySlot);
-                    return inventory.UpdateStackAmountAtSlot(availableInventorySlot, inventory.storedParts[availableInventorySlot].quantity+1);
-                }
-
-            }
-            catch (Exception e)
-            {
-                print("[OreToParts]Cannot augment quantity " + partName + " " + e.Message);
-                return false;
-            }
-
-        }
         #endregion
     }
 }
