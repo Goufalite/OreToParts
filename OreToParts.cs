@@ -10,26 +10,32 @@ namespace OreToParts
 {
     public class OreToParts : PartModule
     {
+        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = " ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        public string placeholder1;
+
         [KSPField(guiActive = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         [UI_ChooseOption(scene = UI_Scene.Flight)]
         public string craftPart;
 
-        public string craftPartName;
-
-        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_costpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
-        public string displayCraftCost;
-
-        public int craftCost;
+        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "  ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        public string placeholder2;
 
         [KSPField(guiActive = false)]
         public string partList;
 
-        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_duplicatecost", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
-        public string duplicateCost;
-
         [KSPField(guiActive = false)]
         public string resources;
 
+        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_costpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        public string displayCraftCost;
+
+        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_duplicatecost", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        public string duplicateCost;
+
+        // cache for the craft part name when selected by the slider
+        public string craftPartName;
+
+        // cache for the resource cost
         public Dictionary<string, float> craftResourcesDict;
 
         public override void OnAwake()
@@ -230,6 +236,7 @@ namespace OreToParts
                 print("[OreToParts]Cannot craft part " + craftPart + " " + e.Message);
             }
         }
+
         #region debug
 #if DEBUG
         [KSPEvent(guiName = "Debug", guiActive = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
