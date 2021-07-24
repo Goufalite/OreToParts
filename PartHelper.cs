@@ -6,6 +6,13 @@ namespace OreToParts
 {
     public static class PartHelper
     {
+        public enum ScrapMode
+        {
+            always,
+            partial,
+            block
+        }
+
         #region Part info
         public static float PartMass(string partName)
         {
@@ -100,6 +107,59 @@ namespace OreToParts
             }
             return "";
         }
+
+        public static bool CanScrap(Part part, string partName, Dictionary<string, float> resourcesDict, ScrapMode scrapMode)
+        {
+            if (scrapMode == ScrapMode.always)
+            {
+                return true;
+            }
+
+            float mass = PartMass(partName);
+            bool partialResourceFound = false;
+            foreach (var ress in resourcesDict)
+            {
+                double price = Math.Round(ress.Value * mass * 1000, 2);
+                if (!part.Resources.Contains(ress.Key) && scrapMode == ScrapMode.block)
+                {
+                    if (scrapMode == ScrapMode.block)
+                    {
+                        // no container for resource
+                        return false;
+                    }
+                }
+                if (part.Resources[ress.Key].amount + price > part.Resources[ress.Key].maxAmount + 0.0001f)
+                {
+                    if (scrapMode == ScrapMode.block)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // there is at least one ressource available
+                    partialResourceFound = true;
+
+                }
+            }
+
+            // block mode should have detected an inexistant/full resource
+            return partialResourceFound;
+        }
+
+        public static void ProduceOre(Part part, string partName, Dictionary<string, float> resourcesDict)
+        {
+            float mass = PartMass(partName);
+            foreach (var ress in resourcesDict)
+            {
+                if (!part.Resources.Contains(ress.Key))
+                {
+                    continue;
+                }
+                part.Resources[ress.Key].amount = Math.Min(Math.Round(ress.Value * mass * 1000, 2) + part.Resources[ress.Key].amount, part.Resources[ress.Key].maxAmount);
+            }
+        }
+
         #endregion
     }
 }

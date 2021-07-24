@@ -7,8 +7,6 @@ Receive parts!
 
 Introducing a minimalistic mod transforming all ore tanks into converters changing ore into vital parts such as repair kits, solar panels,...
 
-2 modes are available
-
 ## Craft
 
 The oretotanks.cfg file contains a comma-separated list of parts that can be crafted. The ore price to craft them is the mass of the part (5kg = 5 units of ore). The part will be stored in the ore tank’s new inventory, so keep an eye on it!
@@ -17,6 +15,16 @@ The converter can only craft cargo-type parts which have a volume. You can list 
 ## Duplicate
 
 Place a part to duplicate in the first slot and press Duplicate! Same as above, the ore price is the mass of the part.
+
+## Scrap
+
+Transform the part in the first slot into ore, or throw it to oblivion! Just change the `scrapMode` setting in the cfg file to change the scraping strategy : 
+
+* **always** : destroyes the part and tries to fill all needed ore at maximum cost
+* **partial** : tries to fill all needed ore but blocks if a ore container will overflow
+* **block** : checks if the recycled ore can be stored
+
+This is an autonomous part module, so you can put it anywhere with an `always` mode to trash everything you don't need, like a "throw to sas" feature!
 
 ## Adding my mod’s parts/custom parts.
 
@@ -66,6 +74,10 @@ Please provide a KSP.log file in order for me to help you.
 English, French
 
 ## Changelog
+
+### 0.3.0.0
+* (in progress)
+* Scrap part module to transform parts into ore, or simply get rid of an inventory item
 
 ### 0.2.0.0
 * Added Eva cylinders

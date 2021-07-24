@@ -20,17 +20,17 @@ namespace OreToParts
         [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "  ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string placeholder2;
 
-        [KSPField(guiActive = false)]
-        public string partList;
-
-        [KSPField(guiActive = false)]
-        public string resources;
-
         [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_costpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string displayCraftCost;
 
         [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_duplicatecost", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string duplicateCost;
+
+        [KSPField(guiActive = false)]
+        public string partList;
+
+        [KSPField(guiActive = false)]
+        public string resources;
 
         // cache for the craft part name when selected by the slider
         public string craftPartName;
@@ -42,50 +42,9 @@ namespace OreToParts
         {
             base.OnAwake();
 
-            // partlist parsing
-            var crafts = new List<string>();
-            try
-            {
-                var lPartList = partList.Split(',');
-                var craftPartName = new List<String>();
-        
-                for (int i = 0; i < lPartList.Length; i++)
-                {
-                    crafts.Add(lPartList[i].Trim());
-                    craftPartName.Add(PartHelper.PartDisplayName(lPartList[i].Trim()));
-                }
-                var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
-                uiparts.options = crafts.ToArray();
-                uiparts.display = craftPartName.ToArray();
-                craftPart = uiparts.options[0];
+            ParsePartList();
 
-            }
-            catch (Exception e)
-            {
-                print("[OreToParts]Unable to load part list to craft: " + e.Message);
-                crafts = new List<string>() { "evaRepairKit" };
-                var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
-                uiparts.options = crafts.ToArray();
-                uiparts.display = new string[] { "Repair kit" };
-                craftPart = uiparts.options[0];
-            }
-
-            // resource parsing
-            craftResourcesDict = new Dictionary<string, float>();
-            try
-            {
-                var ressTab = resources.Split(',');
-                foreach (var ress in ressTab)
-                {
-                    var ratioPart = ress.Split('|');
-                    craftResourcesDict.Add(ratioPart[0].Trim(), float.Parse(ratioPart[1]));
-                }
-            }
-            catch (Exception e)
-            {
-                print("[OreToParts]Unable to load resource list: " + e.Message);
-                craftResourcesDict.Add("Ore", 1.0f);
-            }
+            craftResourcesDict = UtilitiesHelper.ParseResources(resources,"Ore",1.0f);
         }
 
         public override void OnUpdate()
@@ -121,6 +80,36 @@ namespace OreToParts
             base.OnStart(state);
         }
 
+        private void ParsePartList()
+        {
+            var crafts = new List<string>();
+            try
+            {
+                var lPartList = partList.Split(',');
+                var craftPartName = new List<String>();
+
+                for (int i = 0; i < lPartList.Length; i++)
+                {
+                    crafts.Add(lPartList[i].Trim());
+                    craftPartName.Add(PartHelper.PartDisplayName(lPartList[i].Trim()));
+                }
+                var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
+                uiparts.options = crafts.ToArray();
+                uiparts.display = craftPartName.ToArray();
+                craftPart = uiparts.options[0];
+
+            }
+            catch (Exception e)
+            {
+                print("[OreToParts]Unable to load part list to craft: " + e.Message);
+                crafts = new List<string>() { "evaRepairKit" };
+                var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
+                uiparts.options = crafts.ToArray();
+                uiparts.display = new string[] { "Repair kit" };
+                craftPart = uiparts.options[0];
+            }
+        }
+
         [KSPEvent(guiName = "#oretotanks_craftpart", guiActiveEditor = false, guiActive = true, externalToEVAOnly = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public void CraftPart()
         {
@@ -136,31 +125,29 @@ namespace OreToParts
             if (ap == null)
             {
                 print("Unknown part " + craftPart);
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_unknownpart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_unknownpart", new object[] { craftPartName }));
                 return;
             }
             if (!ResearchAndDevelopment.PartModelPurchased(ap))
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_researchpart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_researchpart", new object[] { craftPartName }));
                 return;
             }
 
             //craftable?
-            float volPart;
             try
             {
-                volPart = PartHelper.PartVolume(craftPart);
-                if (volPart == -1.0f)
+                if (PartHelper.PartVolume(craftPart) == -1.0f)
                 {
                     // movable part but cannot be stored
-                    ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_noninventorypart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                    UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_noninventorypart", new object[] { craftPartName }));
                     return;
                 }
             }
             catch
             {
                 // construction part, cannot be moved
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_noninventorypart", new object[] { craftPartName }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_noninventorypart", new object[] { craftPartName }));
                 return;
             }
 
@@ -168,7 +155,7 @@ namespace OreToParts
             string canAffordPart = PartHelper.CanAfford(part, craftPart, craftResourcesDict);
             if (!string.IsNullOrEmpty(canAffordPart))
             {
-                ScreenMessages.PostScreenMessage(canAffordPart, 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(canAffordPart);
                 return;
             }
 
@@ -176,7 +163,7 @@ namespace OreToParts
             string checkMassVolumeInventory = InventoryHelper.CheckMassVolumeInventory(inventory, craftPart);
             if (!string.IsNullOrEmpty(checkMassVolumeInventory))
             {
-                ScreenMessages.PostScreenMessage(checkMassVolumeInventory, 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(checkMassVolumeInventory);
                 return;
             }
             
@@ -189,13 +176,13 @@ namespace OreToParts
             var inventory = part.Modules.OfType<ModuleInventoryPart>().SingleOrDefault();
             if (inventory == null)
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_noinventory"), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_noinventory"));
                 return;
             }
             
             if (!inventory.storedParts.ContainsKey(0)|| inventory.storedParts[0].IsEmpty)
             {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_missingduplicatepart"), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_missingduplicatepart"));
                 return;
             }
             StoredPart firstPart = inventory.storedParts[0];
@@ -204,7 +191,7 @@ namespace OreToParts
             string canAffordPart = PartHelper.CanAfford(part, firstPart.partName, craftResourcesDict);
             if (!string.IsNullOrEmpty(canAffordPart))
             {
-                ScreenMessages.PostScreenMessage(canAffordPart, 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(canAffordPart);
                 return;
             }
 
@@ -212,7 +199,7 @@ namespace OreToParts
             string checkMassVolumeInventory = InventoryHelper.CheckMassVolumeInventory(inventory, firstPart.partName);
             if (!string.IsNullOrEmpty(checkMassVolumeInventory))
             {
-                ScreenMessages.PostScreenMessage(checkMassVolumeInventory, 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                UtilitiesHelper.PrintMessage(checkMassVolumeInventory);
                 return;
             }
 
@@ -226,7 +213,7 @@ namespace OreToParts
                 bool succes = InventoryHelper.RealStoreCargoPartAtSlot(inventory, partName, -1);
                 if (!succes)
                 {
-                    ScreenMessages.PostScreenMessage(Localizer.Format("#oretotanks_cannotstore", new object[] { PartHelper.PartDisplayName(partName) }), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+                    UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_cannotstore", new object[] { PartHelper.PartDisplayName(partName) }));
                     return;
                 }
                 PartHelper.ConsumeOre(part, partName, craftResourcesDict);
