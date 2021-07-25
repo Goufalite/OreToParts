@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InventoryHelper.cs" />
+    <Compile Include="ModuleEvaRefueler.cs" />
     <Compile Include="ModuleScrap.cs" />
     <Compile Include="PartHelper.cs" />
     <Compile Include="OreToParts.cs" />

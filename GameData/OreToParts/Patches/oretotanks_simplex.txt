@@ -16,10 +16,10 @@
     %MODULE[ModuleScrap]
     {
         name = ModuleScrap
+        resources = NatualOre|0.5
         // always  = destroys the part even if all resources are full
         // partial = fills as much resources as possible and destroys the part, blocks if all resources are full
         // block   = prevents part from being destroyed if resources are about to be full
-        resources = NatualOre|0.5
         scrapMode = block
     }
 	

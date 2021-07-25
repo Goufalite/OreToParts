@@ -39,14 +39,26 @@
 
 @PART[*]:HAS[@MODULE[OreToParts]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
 {
-    %MODULE[ModuleScrap]
+    @MODULE[ModuleScrap]
     {
-        name = ModuleScrap
-        // always  = destroys the part even if all resources are full
-        // partial = fills as much resources as possible and destroys the part, blocks if all resources are full
-        // block   = prevents part from being destroyed if resources are about to be full
-        resources = Ore|0.5
-        scrapMode = block
-        
+        @resources = Ore|0.5
+    }
+}
+
+@PART[*]:HAS[@MODULE[OreToParts]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
+{
+    @MODULE[ModuleEvaRefueler]
+    {
+        @sourceResource = EVA Propellant
+        @resources = Ore|1
+    }
+}
+
+@PART[*]:HAS[@MODULE[ModuleCommand],@MODULE[ModuleInventoryPart],@RESOURCE[MonoPropellant]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
+{
+    @MODULE[ModuleEvaRefueler]
+    {
+        @sourceResource = EVA Propellant
+        @resources = MonoPropellant|1
     }
 }

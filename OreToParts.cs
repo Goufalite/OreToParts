@@ -250,8 +250,8 @@ namespace OreToParts
                 MyDebug("slot " + i + " canstack:" + inventory.storedParts[i].CanStack.ToString());
                 MyDebug("slot " + i + " empty:" + inventory.storedParts[i].IsEmpty.ToString());
                 MyDebug("slot " + i + " quantity:" + inventory.storedParts[i].quantity);
-                MyDebug("slot " + i + " partpart:" + inventory.storedParts[i].snapshot.partRef.partName);
-                MyDebug("slot " + i + " partpart:" + inventory.storedParts[i].snapshot.partRef.Resources["EVA Propellant"].amount);
+                MyDebug("slot " + i + " partname:" + inventory.storedParts[i].snapshot?.partName ?? "?");
+                //MyDebug("slot " + i + " partress:" + inventory.storedParts[i].snapshot?.resources?[0].amount ?? "?");
             }
         }
 
