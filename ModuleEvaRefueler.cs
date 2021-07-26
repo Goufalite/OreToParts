@@ -12,9 +12,6 @@ namespace OreToParts
         [KSPField(guiActive = false)]
         public string sourceResource;
 
-        [KSPField(guiActive = false)]
-        public string resources;
-
         // cache for the resource cost
         public Dictionary<string, float> refuelResourcesDict;
 
@@ -22,7 +19,7 @@ namespace OreToParts
         {
             base.OnAwake();
 
-            refuelResourcesDict = UtilitiesHelper.ParseResources(resources, "MonoPropellant", 1.0f);
+            refuelResourcesDict = UtilitiesHelper.ParseResources(part, this.GetType().Name, "MonoPropellant", 1.0f);
         }
 
         public override void OnUpdate()

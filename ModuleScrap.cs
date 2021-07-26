@@ -10,15 +10,6 @@ namespace OreToParts
     public class ModuleScrap : PartModule
     {
         [KSPField(guiActive = false)]
-        public string partList;
-
-        [KSPField(guiActive = false)]
-        public string resources;
-
-        [KSPField(guiActive = false)]
-        public float scrapRatio;
-
-        [KSPField(guiActive = false)]
         public string scrapMode;
 
         public PartHelper.ScrapMode scrapModeEnum;
@@ -29,8 +20,6 @@ namespace OreToParts
         public override void OnAwake()
         {
             base.OnAwake();
-
-            scrapResourcesDict = UtilitiesHelper.ParseResources(resources,"Ore",0.5f);
 
             // scrap mode
             switch (scrapMode)
@@ -46,6 +35,8 @@ namespace OreToParts
                     scrapModeEnum = PartHelper.ScrapMode.partial;
                     break;
             }
+
+            scrapResourcesDict = UtilitiesHelper.ParseResources(part, this.GetType().Name, "Ore", 0.5f);
         }
 
         public override void OnUpdate()
@@ -86,7 +77,14 @@ namespace OreToParts
             PartHelper.ProduceOre(part, firstPart.partName, scrapResourcesDict);
 
             // remove part
-            inventory.RemoveNPartsFromInventory(firstPart.partName, 1);
+            if (firstPart.CanStack && inventory.storedParts[0].quantity > 1)
+            {
+                inventory.UpdateStackAmountAtSlot(0, inventory.storedParts[0].quantity - 1);
+            }
+            else
+            {
+                inventory.ClearPartAtSlot(0);
+            }
             GameEvents.onModuleInventoryChanged.Fire(inventory);
         }
     }

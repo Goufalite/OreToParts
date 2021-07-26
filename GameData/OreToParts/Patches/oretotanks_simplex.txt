@@ -5,22 +5,49 @@
     {
         // lists
 		partList = evaRepairKit,evaScienceKit,HighGainAntenna5,solarPanels4,evaJetpack,evaCylinder
-		//default values, don't touch
+		//default value, don't touch
 		craftPart = evaRepairKit
-        craftPartName = Repair Kit
-		cost = 15
-        resources = NaturalOre|1
+        RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = NaturalOre
+				ratio = 1
+			}
+		}
     }
 
     
     %MODULE[ModuleScrap]
     {
         name = ModuleScrap
-        resources = NatualOre|0.5
         // always  = destroys the part even if all resources are full
         // partial = fills as much resources as possible and destroys the part, blocks if all resources are full
         // block   = prevents part from being destroyed if resources are about to be full
         scrapMode = block
+        RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = NaturalOre
+				ratio = 1
+			}
+		}
+
+    }
+
+	%MODULE[ModuleEvaRefueler]
+    {
+        name = ModuleEvaRefueler
+        RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = NaturalOre
+				ratio = 1
+			}
+		}
+
     }
 	
 	%MODULE[ModuleInventoryPart]

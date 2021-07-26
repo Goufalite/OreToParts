@@ -29,12 +29,6 @@ namespace OreToParts
         [KSPField(guiActive = false)]
         public string partList;
 
-        [KSPField(guiActive = false)]
-        public string resources;
-
-        // cache for the craft part name when selected by the slider
-        public string craftPartName;
-
         // cache for the resource cost
         public Dictionary<string, float> craftResourcesDict;
 
@@ -44,7 +38,7 @@ namespace OreToParts
 
             ParsePartList();
 
-            craftResourcesDict = UtilitiesHelper.ParseResources(resources,"Ore",1.0f);
+            craftResourcesDict = UtilitiesHelper.ParseResources(part, this.GetType().Name, "Ore", 1.0f);
         }
 
         public override void OnUpdate()
@@ -64,7 +58,7 @@ namespace OreToParts
             {
                 duplicateCost = "?";
             }
-            craftPartName = PartHelper.PartDisplayName(craftPart);
+            var craftPartName = PartHelper.PartDisplayName(craftPart);
             if (craftPartName.StartsWith("??"))
             {
                 displayCraftCost = "??";
@@ -86,16 +80,16 @@ namespace OreToParts
             try
             {
                 var lPartList = partList.Split(',');
-                var craftPartName = new List<String>();
+                var lPartName = new List<String>();
 
                 for (int i = 0; i < lPartList.Length; i++)
                 {
                     crafts.Add(lPartList[i].Trim());
-                    craftPartName.Add(PartHelper.PartDisplayName(lPartList[i].Trim()));
+                    lPartName.Add(PartHelper.PartDisplayName(lPartList[i].Trim()));
                 }
                 var uiparts = (UI_ChooseOption)base.Fields["craftPart"].uiControlFlight;
                 uiparts.options = crafts.ToArray();
-                uiparts.display = craftPartName.ToArray();
+                uiparts.display = lPartName.ToArray();
                 craftPart = uiparts.options[0];
 
             }
@@ -121,6 +115,7 @@ namespace OreToParts
             }
 
             // existence
+            var craftPartName = PartHelper.PartDisplayName(craftPart);
             AvailablePart ap = PartLoader.getPartInfoByName(craftPart);
             if (ap == null)
             {

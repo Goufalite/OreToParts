@@ -33,7 +33,21 @@
 @PART[*]:HAS[@MODULE[OreToParts]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
 {
 	@MODULE[OreToParts] {
-		@resources = Ore|0.5,Hydrogen|1
+		!RESOURCESLIST {}
+		RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = Ore
+				ratio = 1
+			}
+			RESOURCE_NEEDED
+			{
+				name = Hydrogen
+				ratio = 0.5
+			}
+		}
+
 	}
 }
 
@@ -41,7 +55,15 @@
 {
     @MODULE[ModuleScrap]
     {
-        @resources = Ore|0.5
+        !RESOURCESLIST {}
+		RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = Ore
+				ratio = 0.5
+			}
+		}
     }
 }
 
@@ -50,15 +72,36 @@
     @MODULE[ModuleEvaRefueler]
     {
         @sourceResource = EVA Propellant
-        @resources = Ore|1
+        !RESOURCESLIST {}
+		RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = Ore
+				ratio = 1
+			}
+			RESOURCE_NEEDED
+			{
+				name = Hydrogen
+				ratio = 0.5
+			}
+		}
     }
 }
 
-@PART[*]:HAS[@MODULE[ModuleCommand],@MODULE[ModuleInventoryPart],@RESOURCE[MonoPropellant]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
+@PART[*]:HAS[@MODULE[ModuleCommand],@MODULE[ModuleEvaRefueler],@RESOURCE[MonoPropellant]]:NEEDS[CommunityResourcePack]:AFTER[OreToParts]
 {
     @MODULE[ModuleEvaRefueler]
     {
         @sourceResource = EVA Propellant
-        @resources = MonoPropellant|1
+        !RESOURCESLIST {}
+		RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = MonoPropellant
+				ratio = 1
+			}
+		}
     }
 }
