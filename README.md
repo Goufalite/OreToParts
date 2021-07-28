@@ -24,7 +24,10 @@ Transform the part in the first slot into ore, or throw it through the sas!
 
 ## EVA Refuel
 
-[If you deactivated jetpack and cylinder refueling](https://forum.kerbalspaceprogram.com/index.php?/topic/139980-130-community-database-of-module-manager-patches-for-stock-ksp/&do=findComment&comment=4005087), you can use this refueler to transform Ore or Monoprop (or any custom resource) into EVA fuel. Just put the parts you want to refuel in the inventory of the part having the refueler (doesn't work on kerbals yet...)'.
+[If you deactivated jetpack and cylinder refueling](https://forum.kerbalspaceprogram.com/index.php?/topic/139980-130-community-database-of-module-manager-patches-for-stock-ksp/&do=findComment&comment=4005087), you can use this refueler to transform Ore or Monoprop (or any custom resource) into EVA fuel. 
+Just put the parts you want to refuel in the inventory of the part having the refueler. 
+
+Kerbals present in the part containing the refueler will have their jetpacks refueled too!
 
 ## Licence
 
@@ -53,6 +56,10 @@ Please provide a KSP.log file in order for me to help you.
 English, French
 
 ## Changelog
+
+### 0.3.1.0
+* Kerbals in the part containing the EVA refueler will have their jetpacks refueled too!
+* Partial EVA parts refueling
 
 ### 0.3.0.0
 * Code refactoring

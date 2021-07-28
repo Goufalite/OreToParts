@@ -160,6 +160,20 @@ namespace OreToParts
             }
         }
 
+        public static double MaxAfford(Part part, double requiredAmount, Dictionary<string, float> resourcesDict)
+        {
+            double returnAmount = requiredAmount;
+            foreach(var res in resourcesDict)
+            {
+                if (!part.Resources.Contains(res.Key))
+                {
+                    return 0.0f;
+                }
+                returnAmount = Math.Min(returnAmount, (float)part.Resources[res.Key].amount / res.Value);
+            }
+            return returnAmount;
+        }
+
         #endregion
     }
 }

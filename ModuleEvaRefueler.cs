@@ -41,13 +41,29 @@ namespace OreToParts
         [KSPEvent(guiName = "#oretotanks_refueleva", guiActiveEditor = false, guiActive = true, externalToEVAOnly = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public void Refuel()
         {
-            print("refuel start");
             var inventory = part.Modules.OfType<ModuleInventoryPart>().SingleOrDefault();
             if (inventory == null)
             {
                 return;
             }
 
+            RefillInventory(inventory);
+
+            if (part.protoModuleCrew != null)
+            {
+                foreach (var kerbal in part.protoModuleCrew)
+                {
+                    if (kerbal.KerbalInventoryModule == null)
+                    {
+                        continue;
+                    }
+                    RefillInventory(kerbal.KerbalInventoryModule);
+                }
+            }
+        }
+
+        private void RefillInventory(ModuleInventoryPart inventory)
+        {
             for (int i = 0; i < inventory.InventorySlots; i++)
             {
                 if (!inventory.storedParts.ContainsKey(i))
@@ -58,16 +74,15 @@ namespace OreToParts
                 if (inventory.storedParts[i].snapshot?.resources != null)
                 {
                     var myPart = inventory.storedParts[i].snapshot;
-                    
+
                     try
                     {
                         var resIndex = myPart.resources.FirstOrDefault(a => a.resourceName.Equals(sourceResource));
-                        
+
                         if (resIndex == null)
                         {
                             continue;
                         }
-                        //print("part : "+ resIndex.amount);
                         if (resIndex.amount == resIndex.maxAmount)
                         {
                             continue;
@@ -75,28 +90,19 @@ namespace OreToParts
 
                         // store
                         double fuelNeeded = resIndex.maxAmount - resIndex.amount;
-                        string missingResource = "";
-                        foreach (var res in refuelResourcesDict)
+                        double realFuelNeeded = PartHelper.MaxAfford(part, fuelNeeded, refuelResourcesDict);
+                        
+                        if (fuelNeeded != realFuelNeeded)
                         {
-                            double resourceNeeded = fuelNeeded * res.Value;
-                            if (resourceNeeded > part.Resources[res.Key].amount + 0.0001f)
-                            {
-                                missingResource = res.Key + "(" + Math.Round(resourceNeeded,2) + ")";
-                                break;
-                            }
-                        }
-                        if (!string.IsNullOrEmpty(missingResource))
-                        {
-                            UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_refuelevaempty", new object[] { missingResource }));
-                            return;
+                           UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_refuelevaempty"));
                         }
 
                         foreach (var res in refuelResourcesDict)
                         {
-                            double resourceNeeded = fuelNeeded * res.Value;
+                            double resourceNeeded = realFuelNeeded * res.Value;
                             part.Resources[res.Key].amount -= resourceNeeded;
                         }
-                        resIndex.amount = resIndex.maxAmount;
+                        resIndex.amount += realFuelNeeded;
                         resIndex.UpdateConfigNodeAmounts();
                         GameEvents.onModuleInventoryChanged.Fire(inventory);
 
