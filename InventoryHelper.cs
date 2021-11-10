@@ -60,17 +60,36 @@ namespace OreToParts
             }
             try
             {
+                bool success;
+
                 if (!inventory.storedParts.ContainsKey(availableInventorySlot) || !inventory.storedParts[availableInventorySlot].CanStack)
                 {
                     MyDebug("Full add in " + availableInventorySlot);
-                    bool succes = inventory.StoreCargoPartAtSlot(partName, availableInventorySlot);
-                    return succes;
+                    success = inventory.StoreCargoPartAtSlot(partName, availableInventorySlot);
                 }
                 else
                 {
                     MyDebug("Quantity add in " + availableInventorySlot);
-                    return inventory.UpdateStackAmountAtSlot(availableInventorySlot, inventory.storedParts[availableInventorySlot].quantity + 1);
+                    success = inventory.UpdateStackAmountAtSlot(availableInventorySlot, inventory.storedParts[availableInventorySlot].quantity + 1);
                 }
+
+                if (!success)
+                {
+                    return false;
+                }
+
+                // remove pre-stored electric charge
+                StoredPart storedPart = inventory.storedParts[availableInventorySlot];
+                foreach (ProtoPartResourceSnapshot resource in storedPart.snapshot.resources)
+                {
+                    if (resource.resourceName == "ElectricCharge")
+                    {
+                        resource.amount = 0;
+                        resource.UpdateConfigNodeAmounts();
+                    }
+                }
+
+                return true;
             }
             catch (Exception e)
             {
