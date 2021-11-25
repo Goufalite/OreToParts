@@ -9,8 +9,16 @@ namespace OreToParts
 {
     public class ModuleEvaRefueler : PartModule
     {
-        [KSPField(guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public string sourceResource;
+
+        /// <summary>
+        /// This field is a little tricky: since a bug  affects the fuel of jetpacks in inventories, sometimes players need to roleplay a full fuel usage even if the jetpack is half full.
+        /// If true, the total amount of the EVA part will be taken from the RESOURCE_NEEDED, not the needed fuel
+        /// Bug : https://forum.kerbalspaceprogram.com/index.php?/topic/203705-11121121ore-to-parts-craft-parts-with-ore-duplicate-parts/&do=findComment&comment=4055256
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = false)]
+        public bool forceRefuel;
 
         // cache for the resource cost
         public Dictionary<string, float> refuelResourcesDict;
@@ -18,6 +26,13 @@ namespace OreToParts
         public override void OnAwake()
         {
             base.OnAwake();
+
+            //resetting properties
+            var info = UtilitiesHelper.GetPartInfo(this.part, this.ClassName);
+            if (info != null)
+            {
+                sourceResource = info.GetValue("sourceResource");
+            }
 
             refuelResourcesDict = UtilitiesHelper.ParseResources(part, this.GetType().Name, "MonoPropellant", 1.0f);
         }
@@ -93,28 +108,35 @@ namespace OreToParts
                             MyDebug("No source resource "+sourceResource+" found to refuel EVA");
                             continue;
                         }
-                        if (resIndex.amount == resIndex.maxAmount)
+                        if (resIndex.amount == resIndex.maxAmount && !forceRefuel)
                         {
                             MyDebug("Full EVA part, no need to refuel.");
                             continue;
                         }
 
                         // store
-                        double fuelNeeded = resIndex.maxAmount - resIndex.amount;
+                        double fuelNeeded = forceRefuel ? resIndex.maxAmount : resIndex.maxAmount - resIndex.amount;
                         double realFuelNeeded = PartHelper.MaxAfford(part, fuelNeeded, refuelResourcesDict);
-                        MyDebug("Fuel needed = " + fuelNeeded + " Real fuel needed = " + realFuelNeeded);
+                        
+                        MyDebug("Fuel needed = " + fuelNeeded + " Affordable fuel = " + realFuelNeeded);
                         if (fuelNeeded != realFuelNeeded)
                         {
-                           UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_refuelevaempty"));
+                            UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_refuelevaempty"));
+                            if (forceRefuel)
+                            {
+                                // partial refuel is forbidden in this case
+                                continue;
+                            }
                         }
 
                         foreach (var res in refuelResourcesDict)
                         {
                             double resourceNeeded = realFuelNeeded * res.Value;
-                            MyDebug("Refueling "+resourceNeeded+" with "+res.Key);
+                            MyDebug("Removing "+resourceNeeded+" with "+res.Key);
                             part.Resources[res.Key].amount -= resourceNeeded;
                         }
-                        resIndex.amount += realFuelNeeded;
+                        
+                        resIndex.amount = forceRefuel ? resIndex.maxAmount : resIndex.amount + realFuelNeeded;
                         MyDebug("EVA Part is now "+resIndex.amount);
                         resIndex.UpdateConfigNodeAmounts();
                         GameEvents.onModuleInventoryChanged.Fire(inventory);

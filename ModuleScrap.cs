@@ -9,8 +9,11 @@ namespace OreToParts
 {
     public class ModuleScrap : PartModule
     {
-        [KSPField(guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public string scrapMode;
+
+        [KSPField(isPersistant = false, guiActive = false)]
+        public string scrapParts;
 
         public PartHelper.ScrapMode scrapModeEnum;
 
@@ -20,6 +23,14 @@ namespace OreToParts
         public override void OnAwake()
         {
             base.OnAwake();
+
+            //resetting properties
+            var info = UtilitiesHelper.GetPartInfo(this.part, this.ClassName);
+            if (info != null)
+            {
+                scrapMode = info.GetValue("scrapMode");
+                scrapParts = info.GetValue("scrapParts");
+            }
 
             // scrap mode
             switch (scrapMode)
@@ -65,6 +76,12 @@ namespace OreToParts
                 return;
             }
             StoredPart firstPart = inventory.storedParts[0];
+
+            if (!scrapParts.Equals("all") && !scrapParts.Contains(firstPart.partName))
+            {
+                UtilitiesHelper.PrintMessage(Localizer.Format("#oretotanks_cannotscrapwhitelist", new object[] { PartHelper.PartDisplayName(firstPart.partName) }));
+                return;
+            }
 
             // price
             if (!PartHelper.CanScrap(part, firstPart.partName, scrapResourcesDict, scrapModeEnum))

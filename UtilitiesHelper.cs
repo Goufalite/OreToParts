@@ -6,6 +6,21 @@ namespace OreToParts
 {
     public static class UtilitiesHelper
     {
+        public static ConfigNode GetPartInfo(Part part, string moduleName)
+        {
+            if (part?.partInfo != null)
+            {
+                return GameDatabase.Instance.GetConfigs("PART")
+                                .Single(c => part.partInfo.name == c.name.Replace('_', '.'))
+                                .config.GetNodes("MODULE")
+                                .Single(n => n.GetValue("name") == moduleName);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
         public static Dictionary<string, float> ParseResources(Part part, string moduleName, string defaultResource, float defaultRatio)
         {
             Dictionary<string, float> resourcesDict = new Dictionary<string, float>();

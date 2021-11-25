@@ -10,24 +10,27 @@ namespace OreToParts
 {
     public class OreToParts : PartModule
     {
-        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = " ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        [KSPField(isPersistant = false, guiActive = true, guiActiveUnfocused = true, guiName = " ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string placeholder1;
 
-        [KSPField(guiActive = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        [KSPField(isPersistant = false, guiActive = true, guiActiveUnfocused = true, groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         [UI_ChooseOption(scene = UI_Scene.Flight)]
         public string craftPart;
 
-        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "  ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        [KSPField(isPersistant = false, guiActive = true, guiActiveUnfocused = true, guiName = "  ", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string placeholder2;
 
-        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_costpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        [KSPField(isPersistant = false, guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_costpart", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string displayCraftCost;
 
-        [KSPField(guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_duplicatecost", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
+        [KSPField(isPersistant = false, guiActive = true, guiActiveUnfocused = true, guiName = "#oretotanks_duplicatecost", groupName = "craftParts", groupDisplayName = "#oretotanks_groupname")]
         public string duplicateCost;
 
-        [KSPField(guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public string partList;
+
+        [KSPField(isPersistant = false, guiActive = false)]
+        public bool enableDuplicator = true;
 
         // cache for the resource cost
         public Dictionary<string, float> craftResourcesDict;
@@ -35,6 +38,15 @@ namespace OreToParts
         public override void OnAwake()
         {
             base.OnAwake();
+
+            //resetting properties
+            var info = UtilitiesHelper.GetPartInfo(this.part, this.ClassName);
+            if (info!=null)
+            {
+                craftPart = info.GetValue("craftPart");
+                partList = info.GetValue("partList");
+                enableDuplicator = info.GetValue("enableDuplicator").Equals("true");
+            }
 
             ParsePartList();
 
@@ -44,6 +56,9 @@ namespace OreToParts
         public override void OnUpdate()
         {
             base.OnUpdate();
+
+            this.Events["DuplicatePart"].guiActive = enableDuplicator;
+            this.Fields["duplicateCost"].guiActive = enableDuplicator;
 
             var inventory = part.Modules.OfType<ModuleInventoryPart>().SingleOrDefault();
             if (inventory == null)

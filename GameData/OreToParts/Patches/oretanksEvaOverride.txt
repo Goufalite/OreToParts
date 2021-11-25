@@ -1,0 +1,39 @@
+// enable this cfg file if refuelling EVA parts doesn't change the monoprop value
+
+@PART[*]:HAS[@MODULE[ModuleCommand],@MODULE[ModuleInventoryPart],@RESOURCE[MonoPropellant]]:NEEDS[OreToParts]
+{
+    %MODULE[OreToParts]
+    {
+        name = OreToParts
+		// lists
+		partList = evaJetpack,evaCylinder
+		//default value, don't touch
+		craftPart = evaJetpack
+		enableDuplicator = false
+        RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = MonoPropellant
+				ratio = 0.25
+			}
+		}
+    }
+
+	%MODULE[ModuleScrap]
+    {
+        name = ModuleScrap
+        scrapMode = always
+        scrapParts = evaJetpack,evaCylinder
+        RESOURCESLIST
+		{
+			RESOURCE_NEEDED
+			{
+				name = MonoPropellant
+				ratio = 0.10
+			}
+		}
+        
+    }
+
+}
