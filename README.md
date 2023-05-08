@@ -11,7 +11,7 @@ Introducing a minimalistic mod transforming all ore tanks into converters changi
 
 ## Craft
 
-The `oretotanks.cfg` file contains a comma-separated list of parts that can be crafted. The ore price to craft them is the mass of the part (5kg = 5 units of ore). The part will be stored in the ore tank’s new inventory, so keep an eye on it!
+The `oretotanks.cfg` file contains a comma-separated list of parts that can be crafted. The ore price to craft them is the mass of the part (5kg = 5 units of ore). The part will be stored in the ore tankâ€™s new inventory, so keep an eye on it!
 The converter can only craft cargo-type parts which have a volume. You can list them in the VAB by pressing the cargo-like button near the action-groups button.
 
 ## Duplicate
@@ -56,6 +56,12 @@ Please provide a KSP.log file in order for me to help you.
 English, French
 
 ## Changelog
+
+### 0.4.0.0
+* [PR2](https://github.com/Goufalite/OreToParts/pull/2) Remove energy from crafted electrical parts (thanks @MSchmoecker !)
+* Field non-persistance
+* Added a whitelist to scrap module
+* Added a "forceRefuel" for the EVA refueler module to roleplay resource drain if the EVA parts are somewhat already full
 
 ### 0.3.1.0
 * Kerbals in the part containing the EVA refueler will have their jetpacks refueled too!
